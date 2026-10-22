@@ -11,6 +11,13 @@ class post(BaseModel):
     published:bool=True
     rating:Optional[int]=None
 
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    published: Optional[bool] = None
+    rating: Optional[int] = None
+
+
 my_post=[{"title":"title of post 1","content": "content of post 1","id":1},{"title":"faverate foods","content":"i like piza","id":2}]
 
 def find_post(id):
@@ -57,6 +64,41 @@ def get_post(id: int,response:Response):
     return{"data":post}
 
 
+@app.put("/post/{id}")
+def update_post(id: int, updated_post: post):
+    post_dict = find_post(id)
+
+    if post_dict is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found"
+        )
+
+    post_dict["title"] = updated_post.title
+    post_dict["content"] = updated_post.content
+    post_dict["published"] = updated_post.published
+    post_dict["rating"] = updated_post.rating
+
+    return {"data": post_dict}
+
+
+@app.patch("/post/{id}")
+def patch_post(id: int, updated_post:PostUpdate):
+    post_dict = find_post(id)
+
+    if post_dict is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found"
+        )
+
+    update_data = updated_post.model_dump(exclude_unset=True)
+
+    post_dict.update(update_data)
+
+    return {"data": post_dict}
+
+
 # delete all spacific post
 @app.delete("/post/{id}")
 def delete_post(id:int):
@@ -64,4 +106,4 @@ def delete_post(id:int):
         if post["id"]==id:
             my_post.remove(post)
             return{"message":f"post{post["id"]}:delete"}
-    return{"message":"post not found"}
+    return{"message":f"post{post['id']} not found"}
